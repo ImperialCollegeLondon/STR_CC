@@ -24,142 +24,145 @@ clear;clc;
 % Several Config
 close all
 setFigureProperty('Subplot2');
-global regionName savePath region
+global regionName savePath region ensNo
 ENSEMBLENO = getEnsNos();
 durThre = [];% 6;
 
 Num = 40;%
-for regionName = {'WAL','SCO','EUK'}% 
+for regionName = {'CPM_NW','CPM_NE','CPM_S'}% {'SCO','WAL','EUK'}% 
 
     regionName = regionName{1};
     region = getfield(REGIONS_info(),regionName);
     
     x_name = 'rpmax';%'rspeed';%'rsize';%
     savePath = 'C:\Users\Yuting Chen\Dropbox (Personal)\Data_PP\Fig_UKCP\StormTracking';
-    
+    %
     PERIODS = {'1980-2000','2060-2080'}; % {'2007-2018'};% ;'2020-2040',
     RAs = [];
-    
+    ha_PaFu = tight_subplot(1,3,[0.01 0.01],[.19 0.01],[.10 .15]);
     % Get data (opt: plot)
     pi = 1;
+    summaryTable = [];
     for Period = PERIODS
         
         Period = Period{1};
-        %{
-        Ra = [];
-        for ensNo = ENSEMBLENO([1:12])
-            ensNo = ensNo{1};
-            [STATS0,T0] = get4Plot(Period,ensNo,Num,durThre);
-            Ra0 = plot_40CS(STATS0,T0,Period,durThre,ensNo);
-            Ra = cat(3,Ra,Ra0);
-            close all
-        end
-        Config = getConfig(upper(regionName),6,Period,ensNo);
-        save(sprintf('%s%sCS_%s_%s_4PubPlot_%03dStorms.mat',Config.saveIt.path,...
-            filesep,regionName,Period,Num*12),'Ra');
-        %}
+        
+%         Ra = [];
+%         for ensNo = ENSEMBLENO([1:12])
+%             ensNo = ensNo{1};
+%             [STATS0,T0] = get4Plot(Period,ensNo,Num,durThre);
+%             
+%             Ra0 = plot_40CS(STATS0,T0,Period,durThre,ensNo);
+%             Ra = cat(3,Ra,Ra0);
+%             close all
+%             
+%             plot_averageRa(Ra0,Period,{ensNo},durThre);
+%             close all
+%         end
+%         Config = getConfig(upper(regionName),6,Period,ensNo);
+%         save(sprintf('%s%sCS_%s_%s_4PubPlot_%03dStorms.mat',Config.saveIt.path,...
+%             filesep,regionName,Period,Num*12),'Ra');
+        %%
+        axes(ha_PaFu(pi))
         ensNo = '15';
         Config = getConfig(upper(regionName),6,Period,ensNo);
         load(sprintf('%s%sCS_%s_%s_4PubPlot_%03dStorms.mat',Config.saveIt.path,...
             filesep,regionName,Period,Num*12),'Ra');
-        plot_averageRa(Ra,Period,ENSEMBLENO,durThre);
+        
+        [summaryTable{pi}] = plot_averageRa(Ra,Period,ENSEMBLENO,durThre);
         
         RAs{pi} = Ra;
         pi = pi+1;
     end
     
-    close all
+    c = colorbar('Location','SouthOutside','Position',[0.1 0.055 0.5 0.05]);
+    c.Ticks = [1,20,40,60,80];c.TickLength = 0.02;
+    c.TickLabels = strcat(c.TickLabels,'mm/h');
     
-    
-    
-    %% test %% plot Precipitation Reduction
-    figure;
-    hold on;
-    x = 2.2*(-25:25);
-    y = 2.2*(-25:25);
-    [XX,YY] = meshgrid(x,y);
-    RD = sqrt(XX.^2+YY.^2);
-    hand = [];
-    Ra_ens = reshape(RAs{1},[size(RAs{1},[1,2]),size(RAs{1},[3])/12,12]);
-    DAT = squeeze(nanmean(nanmean(Ra_ens,4),3));
-    [hand(1),xi_1,yi_1,Mfit_1] = plotReduction(DAT,RD,RAs{1},getColor(PERIODS{1}));
-    
-    Ra_ens = reshape(RAs{2},[size(RAs{2},[1,2]),size(RAs{2},[3])/12,12]);
-    DAT = squeeze(nanmean(nanmean(Ra_ens,4),3));
-    [hand(2),xi_2,yi_2,Mfit_2] = plotReduction(DAT,RD,RAs{2},getColor(PERIODS{2}));
-
-    ylim([0,1.1]);%%%%
-    xlim([100,5000])
-    set(gca,'YScale','log')
-    set(gca,'XScale','log')
-    1;
-    %% Output Plot %%
-    % plot Radial averaged precipitation
-    figure;
-    hold on;
-    x = 2.2*(-25:25);
-    y = 2.2*(-25:25);
-    [XX,YY] = meshgrid(x,y);
-    RD = sqrt(XX.^2+YY.^2);
-    hand = [];
-    Ra_ens = reshape(RAs{1},[size(RAs{1},[1,2]),size(RAs{1},[3])/12,12]);
-    DAT = squeeze(nanmean(nanmean(Ra_ens,4),3));
-    % DAT = squeeze((nanmedian(Ra_ens,3)));
-    [hand(1),xi_1,yi_1,Mfit_1] = plotOneRadialP(DAT,RD,RAs{1},getColor(PERIODS{1}));
-    Ra_ens = reshape(RAs{2},[size(RAs{2},[1,2]),size(RAs{2},[3])/12,12]);
-    DAT = squeeze(nanmean(nanmean(Ra_ens,4),3));
-    % DAT = squeeze((nanmedian(Ra_ens,3)));
-    [hand(2),xi_2,yi_2,Mfit_2] = plotOneRadialP(DAT,RD,RAs{2},getColor(PERIODS{2}));
-    % DAT = squeeze(nanmedian(RAs{3},3));
-    % hand(3) = plotOneRadialP(DAT,RD,RAs{3},'k');
-    
-    % set(gca,'XScale','log');%%%%
-    % ylim([0,1.1]);%%%%
-    
-    
-    Mfit_1
-    Mfit_2
-    yyaxis right
-    plot(xi_1,100*(yi_2-yi_1)./yi_1,'-','Color',ones(1,3)*0.7);
     ax = gca;
-    ylim([-10,90]);
-    ax.YColor = ones(1,3)*0.4;
-    ylabel('PR Difference [%]')
-    yyaxis left
-    legend(hand,PERIODS);
-    % xlim([0,40]);ylim([0,60])
-    xlim([0,35]);ylim([0,85])
-    xlabel('Radial distance from system centre (km)');
-    ylabel('Mean Precipitation (mm h^{-1})');
-    set(gca,'TickDir','out');
-    saveName = sprintf('%s-MeanP_RadialR-%s-Thre%02dh',regionName,ensNo,durThre);
-    savePlot([savePath,filesep,saveName],'XYWH',[150,0,300,250],'needreply','N','onlyPng',true);
-    
-    close all
-    
-    %%
-    
-    % plot Intensity-Area Curve
-    figure;
-    hold on;
-    
-    DAT = squeeze(nanmean(RAs{1},3));
-    hand(1) = plotOneIntArea(DAT,RD,RAs{1},getColor(PERIODS{1}));
-    DAT = squeeze(nanmean(RAs{2},3));
-    hand(2) = plotOneIntArea(DAT,RD,RAs{2},getColor(PERIODS{2}));
-    % DAT = squeeze(nanmean(RAs{3},3));
-    % hand(3) = plotOneIntArea(DAT,RD,RAs{3},'k');
-    legend(hand,PERIODS);
-    xlim([0.1,60])
-    ylim([0.1,10^5])
-    set(gca,'YScale','log')
-    grid minor
-    ylabel('Precipitation Area Covered (Km^2)');
-    xlabel('Precipitation (mm h^{-1})');
-    set(gca,'TickDir','out');
-    saveName = sprintf('%s-Intensity_Area-%s-Thre%02dh',regionName,ensNo,durThre);
-    savePlot([savePath,filesep,saveName],'XYWH',[150,0,300,250],'needreply','N','onlyPng',true);
-    
+    ylabel('');
+    ax.YTickLabel = [];
+    % close all
+% 
+%    %% Output Plot %%
+%     % plot Radial averaged precipitation
+%     axes(ha_PaFu(pi))
+%     x = 2.2*(-25:25);
+%     y = 2.2*(-25:25);
+%     [XX,YY] = meshgrid(x,y);
+%     RD = sqrt(XX.^2+YY.^2);
+%     hand = [];
+%     Ra_ens = reshape(RAs{1},[size(RAs{1},[1,2]),size(RAs{1},[3])/12,12]);
+%     DAT = squeeze(nanmedian(nanmean(Ra_ens,4),3));
+%     % DAT = squeeze((nanmedian(Ra_ens,3)));
+%     [hand(1),hand(2),xi_1,yi_1,Mfit_1,T1] = plotOneRadialP(DAT,RD,RAs{1},getColor(PERIODS{1}));
+%     Ra_ens = reshape(RAs{2},[size(RAs{2},[1,2]),size(RAs{2},[3])/12,12]);
+%     DAT = squeeze(nanmedian(nanmean(Ra_ens,4),3));
+%     % DAT = squeeze((nanmedian(Ra_ens,3)));
+%     [hand(3),hand(4),xi_2,yi_2,Mfit_2,T2] = plotOneRadialP(DAT,RD,RAs{2},getColor(PERIODS{2}));
+%     % DAT = squeeze(nanmedian(RAs{3},3));
+%     % hand(3) = plotOneRadialP(DAT,RD,RAs{3},'k');
+%     
+%     % set(gca,'XScale','log');%%%%
+%     % ylim([0,1.1]);%%%%
+%    
+%     Mfit_1
+%     Mfit_2
+%     yyaxis right
+%     % plot(xi_1,100*(yi_2-yi_1)./yi_1,'-','Color',ones(1,3)*0.7);
+%     
+%     relDif = 100*(T2.DAT0-T1.DAT0)./T1.DAT0;
+%     relDif = reshape(relDif,12,[]);
+%     plot(xi_1,nanmean(relDif,1),'--','Color',ones(1,3)*0.7);
+%     enR = fill([xi_1;flip(xi_1)],[prctile(relDif,100*1.1/12),flip(prctile(relDif,100*10.9/12))],'k',...
+%         'LineStyle','none');
+%     alpha(enR,0.1)
+%     ax = gca;
+%     ylim([-20,100]);
+%     ax.YColor = ones(1,3)*0.4;
+%     ylabel('PR Difference [%]')
+%     yyaxis left
+%     % legend(hand,PERIODS);
+%     legend(hand,{'Past-Median','Past-Range','Future-Median','Future-Range'},...
+%         'Position',[0.65 0.03 0.27 0.07],'NumColumns',2)
+%     legend('boxoff')
+%     axis('square')
+%     % xlim([0,40]);ylim([0,60])
+%     xlim([0,35]);ylim([0,85])
+%     xlabel('Radial distance from storm centre (km)');
+%     ylabel('Mean Precipitation (mm h^{-1})');
+%     set(gca,'TickDir','out');
+%     saveName = sprintf('%s-MeanP_RadialR-%s-Thre%02dh',regionName,ensNo,durThre);
+%     
+%     pos = get(gca, 'Position');xoffset = 0.05;pos(1) = pos(1) + xoffset;set(gca, 'Position', pos)
+%     savePlot([savePath,filesep,saveName],'XYWH',[150,0,750,320],'needreply','N');
+%     
+%     close all
+% 
+%     %%
+%     
+%     % plot Intensity-Area Curve
+%     figure;
+%     hold on;
+%     
+%     DAT = squeeze(nanmean(RAs{1},3));
+%     hand(1) = plotOneIntArea(DAT,RD,RAs{1},getColor(PERIODS{1}));
+%     DAT = squeeze(nanmean(RAs{2},3));
+%     hand(2) = plotOneIntArea(DAT,RD,RAs{2},getColor(PERIODS{2}));
+%     % DAT = squeeze(nanmean(RAs{3},3));
+%     % hand(3) = plotOneIntArea(DAT,RD,RAs{3},'k');
+%     legend(hand,PERIODS);
+%     xlim([0.1,60])
+%     ylim([0.1,10^5])
+%     set(gca,'YScale','log')
+%     grid minor
+%     ylabel('Precipitation Area Covered (Km^2)');
+%     xlabel('Precipitation (mm h^{-1})');
+%     set(gca,'TickDir','out');
+%     saveName = sprintf('%s-Intensity_Area-%s-Thre%02dh',regionName,ensNo,durThre);
+%     savePlot([savePath,filesep,saveName],'XYWH',[150,0,300,250],'needreply','N','onlyPng',true);
+%     
+%     close all
     
 end
 
@@ -263,34 +266,36 @@ for i = 1:length(STATS0)
         R(isnan(R))=0;[maxi,maxj] = deal(26);
         Ra = cat(3,Ra,R);
     else
-        % # In some rare case #.
-        % centroid point might be very close to boundary of area.
-        % In this case, current setting is to enlarge area and then search
-        % for the complete image pattern again.
-        elNo = 20;
-        if strcmp(region.Name,'bigEUK')
-            elNo = 5;
-        end
-        imageNo = (thisTime.Day-1)*24+thisTime.Hour+1;
-        [A,~,~] = readCPM_nc_1_wider(region,thisTime.Year,thisTime.Month,ensNo,imageNo,elNo);
-        A(A<1/32)=0;
-        R = A;
-        maxi = maxi+elNo;
-        maxj = maxj+elNo;
-        R(R==0) = NaN;
-        R = squeeze(R([max(maxi-25,1):min(size(R,1),maxi+25)],...
-            [max(1,maxj-25):min(size(R,2),maxj+25)]));
-        % R = R*100;
-        if any(~(size(R)==[51,51]))
-            1;
-            continue;
-        else
-            R(isnan(R))=0;
-            Ra = cat(3,Ra,R);
-        end
+        R = NaN(51,51);
+        Ra = cat(3,Ra,R);
+%         % # In some rare case #.
+%         % centroid point might be very close to boundary of area.
+%         % In this case, current setting is to enlarge area and then search
+%         % for the complete image pattern again.
+%         elNo = 20;
+%         if strcmp(region.Name,'bigEUK')
+%             elNo = 5;
+%         end
+%         imageNo = (thisTime.Day-1)*24+thisTime.Hour+1;
+%         [A,~,~] = readCPM_nc_1_wider(region,thisTime.Year,thisTime.Month,ensNo,imageNo,elNo);
+%         A(A<1/32)=0;
+%         R = A;
+%         maxi = maxi+elNo;
+%         maxj = maxj+elNo;
+%         R(R==0) = NaN;
+%         R = squeeze(R([max(maxi-25,1):min(size(R,1),maxi+25)],...
+%             [max(1,maxj-25):min(size(R,2),maxj+25)]));
+%         % R = R*100;
+%         if any(~(size(R)==[51,51]))
+%             1;
+%             continue;
+%         else
+%             R(isnan(R))=0;
+%             Ra = cat(3,Ra,R);
+%         end
     end
     if ~any(~(size(R)==[51,51]))
-        subplot(5,8,i);hold on;
+        subplot(5,ceil(length(STATS0)/5),i);hold on;
         R(R==0)=NaN; pcolor(1:51,1:51,R);
         % [maxi,maxj] = find(R == nanmax(R(:)));
         maxj = 26;maxi = 26;
@@ -300,9 +305,11 @@ for i = 1:length(STATS0)
         shading flat;box on;
         cptcmap('cw1-013','mapping','scaled','ncol',100,'flip',true);
         caxis([0,30]);
+        format short g
         thisTime.Format='dd-MMM-uuuu HH:mm';
-        title([string(thisTime),sprintf('%04.1d',R(26,26))],'fontsize',8);
+        title([string(thisTime),sprintf('%smm/h',num2str(round(R(26,26))))],'fontsize',8);
         ax = gca;ax.XTick = [];ax.YTick = [];
+        axis('square')
     end
 end
 
@@ -362,7 +369,7 @@ alpha(0.3)
 end
 
 
-function [hand,xi,yi,Mfit] = plotOneRadialP(DAT,RD,RA,colo);
+function [hand,handran,xi,yi,Mfit,T] = plotOneRadialP(DAT,RD,RA,colo);
 
 % DAT0 = DAT(:);
 % RD0 = floor(RD(:));
@@ -370,15 +377,16 @@ function [hand,xi,yi,Mfit] = plotOneRadialP(DAT,RD,RA,colo);
 [Mfit] = deal(NaN);
 imN = 5;
 RA = imresize3(RA,'scale',[imN,imN,1],'method','box');
-x0 = 2.2*linspace(-25,25,51*imN);
-y0 = 2.2*linspace(-25,25,51*imN);
+x0 = 2.2*linspace(-25.5,25.5,size(DAT,1)*imN);
+y0 = 2.2*linspace(-25.5,25.5,size(DAT,1)*imN);
 [XX,YY] = meshgrid(x0,y0);
 RD = sqrt(XX.^2+YY.^2);
 
 RA0 = reshape(RA,[size(RA,[1,2]),size(RA,3)/12,12]);
 RD0 = repmat(reshape(RD,[size(RD),1]),[1,1,size(RA0,[3,4])]);
 ensNo = repmat(reshape(1:12,[1,1,1,12]),[size(RA0,[1:3]),1]);
-RD0 = round(RD0(:));
+RD0 = round(RD0(:)/2.2)*2.2;
+RD0 = (RD0(:));
 DAT0 = RA0(:);
 ensNo = ensNo(:);
 T = table(DAT0,RD0,ensNo);
@@ -392,8 +400,8 @@ T = table(DAT0,RD0,ensNo);
 A = grpstats(T,{'RD0'},{'median',@(x)quantile(x,1),@(x)quantile(x,0)});
 xi = A.RD0;
 yi = A.median_DAT0;
-hand = plot(xi,yi,'-','color',colo);
-hsimran = fill([xi;flip(xi)],[A.Fun3_DAT0;flip(A.Fun2_DAT0)],colo,...
+hand = plot(xi,yi,'-','color',colo);hold on;
+handran = fill([xi;flip(xi)],[A.Fun3_DAT0;flip(A.Fun2_DAT0)],colo,...
     'LineStyle','none');
 try
 xx = xi;
@@ -407,7 +415,7 @@ ci = confint(Mfit,0.95);
 xx = linspace(nanmin(xx),nanmax(xx),100);
 yy = pmax.*exp(-xx./k)+d;
 hold on
-hand = plot(xx,yy,'--','color',colo);
+% hand = plot(xx,yy,'--','color',colo);
 %     hand = plot(xi,yi,'-','color',colo);
 catch me
 %     hand = plot(xi,yi,'-','color',colo);
@@ -417,40 +425,40 @@ end
 alpha(0.3)
 end
 
-function plot_averageRa(Ra,Period,ENSEMBLENO,durThre)
-global regionName savePath ensNo
+function [summary] = plot_averageRa(Ra,Period,ENSEMBLENO,durThre)
+global regionName savePath ensNo region
 fprintf('%02d snapshots were used\n',size(Ra,3));
-figure;
+% figure;
 numRa = size(Ra,3);
-% Ra = reshape(Ra,[size(Ra,[1,2]),size(Ra,3)/12,12]);
-% Ra = squeeze(nanmean(nanmean(Ra,3),4));
-% scaleN = 22;
-% Ra = imresize3(Ra,'scale',[scaleN,scaleN,1],'method','linear');
-% Ra = nanmedian(Ra,3);
-Ra = reshape(Ra,[size(Ra,[1,2]),size(Ra,3)/12,12]);
-Ra = squeeze(nanmean(nanmean(Ra,3),4));
+summary = struct;
 
-Ra = Ra(11:41,11:41);%%%%%%%%%%%
+Ra = reshape(Ra,[size(Ra,[1,2]),size(Ra,3)/length(ENSEMBLENO),length(ENSEMBLENO)]);
+summary.spatialCoverage_range = squeeze(nansum(squeeze(nanmean(Ra,3))>5,[1,2])*2.2*2.2);
+summary.totalVolume_range = squeeze(nansum(squeeze(nanmean(Ra,3)),[1,2])*10^-3/3600*2200*2200);
+Ra = squeeze(nanmedian(nanmean(Ra,3),4));
+summary.totalVolume = nansum(Ra(:))*10^-3/3600*2200*2200;
+summary.spatialCoverage = nansum(Ra(:)>5)*2.2*2.2;
+Ra = Ra(11:41,11:41);
 scaleN = 22;
 Ra = -0.1+exp(imresize(log(Ra+0.1),scaleN,'lanczos2'));
-% Ra = -0.1+exp(imresize(log(Ra+0.1),scaleN,'box'));
-% Ra = imresize(Ra,scaleN,'bilinear');
+% Ra = -0.1+exp(imresize(log(Ra+0.1),scaleN,'bilinear'));
 x = ((1:size(Ra,1))-(size(Ra,1)+1)/2)*2.2/scaleN;
 y = ((1:size(Ra,2))-(size(Ra,1)+1)/2)*2.2/scaleN;
-hold on;
 Ra_temp = Ra;
+
 % Ra_temp(Ra_temp<1) = NaN;%%%%%%%% 
-pcolor(x,y,Ra_temp);
+pcolor(x,y,Ra_temp);hold on;
 [C,h] = contour(x,y,Ra,[5,10,20],'Color',[0.1 0.1 0.1],'Linewidth',1,'Linestyle','-');
 clabel(C,h)
 shading flat
 cptcmap('cw1-013','mapping','scaled','ncol',32,'flip',true);
 caxis([0,80])
 grid on;
-heavyCov = nansum(Ra_temp(:))*10^-3/3600*100*100;
-c = colorbar;
-c.Ticks = [1,20,40,60,80];c.TickLength = 0.02;
-c.TickLabels = strcat(c.TickLabels,'mm/h');
+%
+% c = colorbar;
+% c.Ticks = [1,20,40,60,80];c.TickLength = 0.02;
+% c.TickLabels = strcat(c.TickLabels,'mm/h');
+%
 % plot(size(Ra,1)/2+1,size(Ra,2)/2+1,'r+')
 % set(gca,'TickDir','out');
 
@@ -459,9 +467,14 @@ ylabel('Distance from Centre /km');
 ax = gca;hold on;
 plot(mean(ax.XLim)*ones(2,1),ax.YLim,'k:','linewidth',0.5);
 plot(ax.XLim,mean(ax.YLim)*ones(2,1),'k:','linewidth',0.5);
-text(ax.XLim(2),ax.YLim(2),sprintf('%4.1fm^3 s^{-1}',heavyCov),...
+text(ax.XLim(1),ax.YLim(2),sprintf('%s%s',...
+    getLabel(regionName),Period),...
+    'horizontalalignment','left',...
+    'verticalalignment','top','fontsize',12,'Interpreter','latex');
+text(ax.XLim(2),ax.YLim(2),sprintf('%4.1f$m^3 s^{-1}$',...
+    summary.totalVolume),...
     'horizontalalignment','right',...
-    'verticalalignment','top','fontsize',12);
+    'verticalalignment','top','fontsize',12,'Interpreter','latex');
 % plot(20*ones(2,1),ax.YLim,'k:','Color',[0.1 0.1 0.1],'linewidth',0.5);
 % plot(-20*ones(2,1),ax.YLim,'k:','Color',[0.1 0.1 0.1],'linewidth',0.5);
 % plot(ax.XLim,-20*ones(2,1),'k:','Color',[0.1 0.1 0.1],'linewidth',0.5);
@@ -470,18 +483,17 @@ ax.YTick = [-50,-20,0,20,50];
 ax.XTick = [-50,-20,0,20,50];
 hold off;
 box on
+axis('square')
 
-axis equal
-
-if iscell(ENSEMBLENO) && length(ENSEMBLENO)>1
-    saveName = sprintf('%s-%03dCSs-averaged_%s_%s-%s-Thre%03d',regionName,numRa,Period,...
-        ENSEMBLENO{1},ENSEMBLENO{end},durThre);
-else
-    saveName = sprintf('%s-%03dCSs-averaged_%s_%s-Thre%03d',regionName,numRa,Period,...
-        ensNo,durThre);
-end
-savePlot([savePath,filesep,saveName],'XYWH',[150,0,350,250],'needreply','N',...
-    'onlyPng',true);
+% if iscell(ENSEMBLENO) && length(ENSEMBLENO)>1
+%     saveName = sprintf('%s-%03dCSs-averaged_%s_%s-%s-Thre%03d',regionName,numRa,Period,...
+%         ENSEMBLENO{1},ENSEMBLENO{end},durThre);
+% else
+%     saveName = sprintf('%s-%03dCSs-averaged_%s_%s-Thre%03d',regionName,numRa,Period,...
+%         ensNo,durThre);
+% end
+% savePlot([savePath,filesep,saveName],'XYWH',[150,0,350,250],'needreply','N',...
+%     'onlyPng',true);
 end
 
 
@@ -513,10 +525,25 @@ Rain = squeeze(ncread(listaRain,'pr',...
 scaleF = 1;
 end
 
-
+function str = getLabel(regionName)
+switch(regionName)
+    case 'SCO'
+        str = 'NUK';
+    case 'EUK'
+        str = 'SEUK';
+    case 'WAL'
+        str = 'SWUK';
+    case 'CPM_NW'
+        str = 'NW-UK';
+    case 'CPM_NE'
+        str = 'NE-UK';
+    case 'CPM_S'
+        str = 'S-UK';
+end
+end
 function [A,T] = get4Plot(Period,ensNo,Num,durThre)
 
-global regionName
+global regionName region
 [RE,TE] = deal([]);
 % for MON = 6:8
 %     Config = getConfig(upper(regionName),MON,Period,ensNo);
@@ -539,6 +566,12 @@ TE = TE(len>durThre);
 end
 % STATS = [STATS;Dat.RE];
 
+% trim out non-land area for each event
+[E,N] = getEN(region);
+UKMap = load('H:\CODE_MATLAB\SpatialTemporalDATA\shapeFileFolder\UKBorderGrid.mat');
+[in] = inpolygon(E,N,UKMap.borderE/1000,UKMap.borderN/1000);
+RE = cellfun(@(a)trimIt(a,in),RE,'UniformOutput', false);
+
 % only search for the max value for central part
 STATS_rpmax = cell2mat(cellfun(@(a)nanmax(reshape(a(1+25:size(RE{1},1)-25,1+25:size(RE{1},2)-25,:),...
     1,[])),...
@@ -549,9 +582,10 @@ STATS_rpmax(I(1:Num));
 T = TE(I(1:Num));
 
 [A,T] = cellfun(@(a,t)findRep(a,t,[1+25:size(RE{1},1)-25],[1+25:size(RE{1},2)-25]),A,T,'UniformOutput', false);
-
+    function a = trimIt(a,in)
+        a(repmat(~in,[1,1,size(a,3)])) = 0;%NaN;
+    end
     function [A,T] = findRep(As,Ts,Rii,Rjj)
-        
         % # Opt 1 #
         % We will take the one with biggest coverage of wet as the
         % representaed images of this events.
@@ -589,6 +623,9 @@ T = TE(I(1:Num));
         indmax = find(pm==nanmax(pm(:)),1);
         A = squeeze(As(:,:,indmax));
         T = Ts(indmax);
-        
+        if ~isRegularRegion(region)
+            angle = atan((region.E(2)-region.E(1))/(region.N(2)-region.N(1)))*180/pi;
+            A = imrotate(A,-angle,'nearest','loose');%rotate it back
+        end
     end
 end
