@@ -4,38 +4,48 @@
 % Data: 1980-2000 UKCP CPM rainfall or 2060-2080 UKCP CPM rainfall
 %
 %
-%
 % ref: ...2002
 % based on C. De Michele 2011 func.6 in Journal of Hydrology
 %
 % @ Yuting CHEN
 % yuting.chen17@imperial.ac.uk
-
+% update: 2020/08/06
 
 clear;clc
 close all
 
-dataInfo = getDataInfo('WAL','1980-2000');
+dataInfo = getDataInfo('CPM_NE','1980-2000');
 for ensNo = dataInfo.ensNo(1:end)
     ensNo = ensNo{1};
-    for dataInfo = [getDataInfo('SCO','1980-2000'),getDataInfo('SCO','2060-2080'),...
-            getDataInfo('WAL','1980-2000'),getDataInfo('WAL','2060-2080'),...
-            getDataInfo('EUK','1980-2000'),getDataInfo('EUK','2060-2080')]
+    for dataInfo = [
+            getDataInfo('CPM_NE','1980-2000'),getDataInfo('CPM_NE','2060-2080'),...
+            getDataInfo('CPM_NW','1980-2000'),getDataInfo('CPM_NW','2060-2080')]
+        % getDataInfo('CPM_S','1980-2000'),getDataInfo('CPM_S','2060-2080')]
+        % [getDataInfo('EUK','1980-2000'),getDataInfo('EUK','2060-2080')]
+        % [getDataInfo('SCO','1980-2000'),getDataInfo('SCO','2060-2080'),...
+        %    getDataInfo('WAL','1980-2000'),getDataInfo('WAL','2060-2080'),...
+        %     getDataInfo('EUK','1980-2000'),getDataInfo('EUK','2060-2080')]
+        
+        saveFile = sprintf('%s%sIDAFs_%s_ensNo%s_%s.mat',dataInfo.savePath,filesep,...
+            dataInfo.region.Name,ensNo,dataInfo.Years);
+        if fopen(saveFile)~=-1
+            % fclose('all')
+            continue;
+        end
         
         [T,ALLRMAX,TIMES] = deal([]);
         
-        [~,time] = getData(dataInfo,ensNo);% #to do# func can be modifed for quicker reading
-        
+        [~,time] = getData(dataInfo,ensNo,'noData');% #to do# func can be modifed for quicker reading
+        [data,time] = getData(dataInfo,ensNo,'');
         for year = reshape(unique(time.Year),1,[])
-
+            
             stats = []; % <table>
             
             tic
-            [data,time] = getData(dataInfo,ensNo);
             thisYearIndex = time.Year == year;
             thisYearTime = time(thisYearIndex);
             dataThisYear = data(:,:,thisYearIndex);
-            clear data;
+            % clear data;
             dataThisYear = double(dataThisYear);
             toc
             
@@ -59,8 +69,10 @@ for ensNo = dataInfo.ensNo(1:end)
                     am = allR_Max;
                     dur = duration;
                     ens = string(ensNo);
-                    T = [T;table(allT_Max,dur,ens,am,area)];
-                    TIMES = cat(2,TIMES,allT_Max(:)');
+                    if ~isempty(allT_Max)
+                        T = [T;table(allT_Max,dur,ens,am,area)];
+                        TIMES = cat(2,TIMES,allT_Max(:)');
+                    end
                     fprintf('ensNo%s year%04d duration %02d area %04.1d %02.1f seconds \n',...
                         ensNo,year,duration,area,toc(startT));
                 end
@@ -68,8 +80,8 @@ for ensNo = dataInfo.ensNo(1:end)
             
         end
         ALLRMAX = ALLRMAX';TIMES = TIMES';
-        save(sprintf('%s%sIDAFs_%s_ensNo%s_%s.mat',dataInfo.savePath,filesep,...
-            dataInfo.region.Name,ensNo,dataInfo.Years),'T','TIMES','-v7.3');
+        save(saveFile,'T','TIMES','-v7.3');
+        clear data dataThisYear
     end
     
 end
@@ -110,23 +122,16 @@ dataInfo.gridReso = 2.2;
 idaf = struct;
 idaf.duration =  [1];%[ 1, 3, 6,12,24];
 idaf.method = 'annualMaximum'; % reference: C. De Michele 2011 in JH
-idaf.area = [1:50].^2*(dataInfo.gridReso).^2;
+idaf.area = [1:42].^2*(dataInfo.gridReso).^2;
 dataInfo.idaf = idaf;
 
 end
 
-function [data,time] = getData(dataInfo,ensNo)
+function [data,time] = getData(dataInfo,ensNo,noData)
+% has not covert to double
 [data,time] = deal([]);
 yearRange = getYearRange(dataInfo);
 if strcmp(dataInfo.season,'JJA')
-    
-    for mon = 6:8
-        load(sprintf('%s%sEnsems_%s_mon%02d.mat',dataInfo.fileGetPath,filesep,ensNo,mon),...
-            'RainEnsembles');
-        shapeSize = [size(RainEnsembles{1},[1,2]),30*24,size(RainEnsembles{1},3)/30/24];
-        data = cat(3,data,reshape(RainEnsembles{1},shapeSize));
-    end
-    data = reshape(data,[size(data,[1,2]),prod(size(data,[3,4]))]);
     
     [hh,dd,yy] = meshgrid(1:24,1:30,yearRange);
     for mon = 6:8
@@ -137,13 +142,23 @@ if strcmp(dataInfo.season,'JJA')
     end
     time = time(:);
     
-    
-    % # to do #
-    % # trim those points outside UK #
+    if ~strcmp('noData',noData)
+        for mon = 6:8
+            load(sprintf('%s%sEnsems_%s_mon%02d.mat',dataInfo.fileGetPath,filesep,ensNo,mon),...
+                'RainEnsembles');
+            shapeSize = [size(RainEnsembles{1},[1,2]),30*24,size(RainEnsembles{1},3)/30/24];
+            data = cat(3,data,reshape(RainEnsembles{1},shapeSize));
+        end
+        data = reshape(data,[size(data,[1,2]),prod(size(data,[3,4]))]);
+        clear RainEnsembles
+    end
+    % trim those points outside UK
     tic
     UKMap = load('H:\CODE_MATLAB\SpatialTemporalDATA\shapeFileFolder\UKBorderGrid.mat');
     [E1,N1] = getEN(dataInfo.region);
     [in] = inpolygon(E1,N1,UKMap.borderE/1000,UKMap.borderN/1000);
+    
+    data = single(data)/dataInfo.scaleF;% convert to double here.
     
     in = repmat(in,[1,1,size(data,3)]);
     data(~in) = NaN;
@@ -152,10 +167,16 @@ if strcmp(dataInfo.season,'JJA')
 else
     error('Check dataInfo.season');
 end
-
-% convert to double
-data = single(data)/dataInfo.scaleF;
-
+% if ~strcmp('noData',noData) & ~isRegularRegion(dataInfo.region)
+%     data = padarray(data,[1 1,0],NaN,'both');
+%     N1 = padarray(N1,[1 1],NaN,'both');
+%     E1 = padarray(E1,[1 1],NaN,'both');
+%     angle = atan((dataInfo.region.E(2)-dataInfo.region.E(1))/...
+%         (dataInfo.region.N(2)-dataInfo.region.N(1)))*180/pi;
+%     E1 = imrotate(E1,-angle,'nearest','loose');
+%     N1 = imrotate(N1,-angle,'nearest','loose');
+%     data = imrotate(data,-angle,'nearest','loose');
+% end
 end
 
 function [yearRange] = getYearRange(dataInfo)

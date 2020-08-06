@@ -3,14 +3,12 @@
 % Radar: NIMROD Composit Radar, from UK Met Office
 % Resolution: 5min, 1km
 % @ Yuting Chen
-% Update: 2020.12
+% Update: 2019.12
 % -----------------------------------------------------------------------%
 
 clear;clc
 close all
 cd('H:\CODE_MATLAB\SpatialTemporalDATA\Radar')
-addpath(genpath(cd));
-addpath('C:\Users\Yuting Chen\Dropbox (Personal)\MatLab_Func');
 dataPath = 'K:\UkRadar2019\NIMROD_2016_2019\badc\ukmo-nimrod\data\composite\';
 savePath = 'K:\UK_Radar_Matlab';
 
@@ -22,7 +20,7 @@ fid = fopen(['H:\CODE_MATLAB\SpatialTemporalDATA\RadarDialogFile\',...
 for year = 2019
     
     for mon = 1:12
-        for day = 1:eomday(year,mon)
+        for day = 1%:eomday(year,mon)
             
             try
             tar_name = [dataPath,...

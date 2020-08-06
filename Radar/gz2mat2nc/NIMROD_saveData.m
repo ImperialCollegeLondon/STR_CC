@@ -9,13 +9,13 @@ function [ status, DAT ] = NIMROD_saveData( dirname,pl,sf)
 %UKMAPfile = 'UKBorderGrid.mat';
 % Output:
 %       status:
-%       DAT: save format used at the data provided by Thanos.
+%       DAT: save data in the same format as provided by Thanos.
 % Example:
 %       dirname = 'F:\NIMROD_2016_2019\backup';
 %       pl = 0;
 %       [ status, DAT ] = NIMROD_saveData( dirname,pl );
-% @ Yuting Chen
-% Imperial College London
+% @ CEDA
+% @ Yuting C
 % Update: 2019.12.05
 %
 % This program is suitable only for running under MS Windows versions of
@@ -89,11 +89,6 @@ if (~isdir(dirname))
 end
 
 DAT = struct;
-% %%%%%
-% % predefine DAT.filds (24*12 fields)
-% ....
-% 
-% %%%%%
 
 % read compressed NIMROD filenames from directory
 F = dir(sprintf('%s%s*.gz', dirname, filesep));
@@ -109,9 +104,7 @@ end
 % uncompress each .gz file using 7-zip, read it and display it on National
 % Grid co-ordinate axes
 for f = 1:No_files
-    if No_files > 24*12
-        1;
-    end
+
     Fname = F(f).name;
     tempVal = regexp(Fname,'\d*','Match');
     timeStr = tempVal{1};
@@ -135,15 +128,9 @@ for f = 1:No_files
     % retrieve name of the single file it contains
     
     Zfname = sprintf('%s_nimrod_ng_radar_rainrate_composite_1km_UK',tempVal{1});
-    % Zfname = '201601010000_nimrod_ng_radar_rainrate_composite_1km_UK';
-    % Zfname = strtrim(replace(result(243+(347:412)),'-',' '));
-    % uncompress contents of the .gz file
-    % (no paths, assume yes to all questions)
     uzcommand =['C:\Apps4PhD\7-Zip\7z.exe e -y ' dirname filesep Fname ];
     [status,result] = system(uzcommand);%,'-echo');
     if (status~=0)
-        % error([ '*.gz file contents did not uncompress in NIMROD_saveData' ...
-        %         result ]);
         % no data in this file.
         [thisM.int_gen_hd, thisM.rl_gen_hd, thisM.rl_datsp_hd, char_hd, ...
             thisM.int_datsp_hd, thisM.rr] = deal(NaN);
@@ -158,11 +145,6 @@ for f = 1:No_files
     
     % delete uncompressed file to save space
     delete( Zfname );
-    % Check orientation is correct by making yellow box in top right hand
-    % corner
-    % xmax = thisM.int_gen_hd(19);
-    % thisM.rr(1:20,xmax-19:xmax) = 320;
-    
     fprintf('---%sFile-->\tZip-->\tUpzip-->\tTransform-->\tSave---\n',Zfname);
     plotit(pl)
     end

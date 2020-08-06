@@ -20,7 +20,7 @@ ENSEMBLENO = {'01','04','05','06','07','08','09','10','11','12','13','15'};
 
 for M=1:length(ENSEMBLENO)
     
-    filePath = ['K:/UkCp18_FutureTemp/',ENSEMBLENO{M},'/'];
+    filePath = ['J:/UKCP18_CPM_Future/',ENSEMBLENO{M},'/'];
     cd(ftp_client, sprintf('/badc/ukcp18/data/land-cpm/uk/2.2km/rcp85/%s/pr/1hr/latest/',ENSEMBLENO{M}));
     fol = sprintf('/badc/ukcp18/data/land-cpm/uk/2.2km/rcp85/%s/pr/1hr/latest/',ENSEMBLENO{M});
     

@@ -60,7 +60,7 @@ arguments
     
     region (1,1) struct
     ENSEMBLENO (1,:) cell
-    MON (1,1) double
+    MON (1,:) double
     IntFac (1,1) double = 32;
     data (1,1) struct = struct('Years',[1980,2000],...
         'fileGetPath','K:/UkCp18/',...
@@ -79,12 +79,32 @@ LON=ncread(ncFileName,'longitude');
 E = E/1000;
 N = N/1000;
 
-
 mkdir(data.savePath);
 fprintf(sprintf('%04d-%04d data will be extracted',data.Years(1),data.Years(end)));
 
 %%
-[region.i,region.j] = getRegionIJ(E,N,region.minE,region.minN);
+if isRegularRegion(region)
+    [region.i,region.j] = getRegionIJ(E,N,region.minE,region.minN);
+    if region.dx ~= 2.2
+        region.dimE = round(region.dimE*region.dx/2.2);
+        region.dimN = round(region.dimN*region.dx/2.2);
+    end
+    i_this = region.i:region.i+region.dimE-1;
+    j_this = region.j:region.j+region.dimN-1;
+    Rain_E = E(i_this,j_this);
+    Rain_N = N(i_this,j_this);
+else
+    % region is represented by a polygon {region.E},{region.N}
+    % (rectangular shape having an rotation angle ~= 0)
+    angle = atan((region.E(2)-region.E(1))/(region.N(2)-region.N(1)))*180/pi;
+    E = imrotate(E,angle,'nearest','loose');
+    N = imrotate(N,angle,'nearest','loose');
+    [region.i,region.j] = arrayfun(@(e0,n0)getRegionIJ(E,N,e0,n0),region.E,region.N);
+    i_this = min(region.i):max(region.i);
+    j_this = min(region.j):max(region.j);
+    Rain_E = E(i_this,j_this);
+    Rain_N = N(i_this,j_this);
+end
 
 warning off
 
@@ -100,13 +120,19 @@ for mon = MON
     for M=1:length(ENSEMBLENO)
         
         filePath = [data.fileGetPath,ENSEMBLENO{M},'/'];
-        
-        if strcmpi(options,'Mean')
-            MRain = [];
+        if isRegularRegion(region)
+            if strcmpi(options,'Mean')
+                MRain = [];
+            else
+                Rain = NaN(region.dimE,region.dimN,20*30*24);
+            end
         else
-            Rain = NaN(region.dimE,region.dimN,20*30*24);
+            if strcmpi(options,'Mean')
+                MRain = [];
+            else
+                Rain = [];
+            end
         end
-        
         
         L = 1;
         
@@ -117,29 +143,35 @@ for mon = MON
                 fileName = sprintf('pr_rcp85_land-cpm_uk_2.2km_%s_1hr_%04d%02d01-%04d%02d30.nc',...
                     ENSEMBLENO{M},year,mon,year,mon);
                 
-                listaRain = dir([filePath,fileName]);
+                thisNCFile = dir([filePath,fileName]);
                 
-                
-                if ~isempty(listaRain)
+                if ~isempty(thisNCFile)
                     
-                    listaRain = fullfile({listaRain.folder},{listaRain.name});
-                    listaRain = listaRain{1};
-                    A = ncinfo(listaRain);
+                    thisNCFile = fullfile({thisNCFile.folder},{thisNCFile.name});
+                    thisNCFile = thisNCFile{1};
+                    A = ncinfo(thisNCFile);
                     
-                    if strcmpi(options,'Mean')
-                        MRain(:,:,L) = nanmean(squeeze(ncread(listaRain,'pr',...
-                            [region.i,region.j,1,1],...
-                            [region.dimE,region.dimN,...
-                            A.Variables(1).Dimensions(:,3).Length,...
-                            A.Variables(1).Dimensions(:,4).Length])),3);
-                    else
-                        Rain(:,:,(L-1)*30*24+1:(L)*30*24) = squeeze(ncread(listaRain,'pr',...
+                    if isRegularRegion(region)
+                        Rain_this = squeeze(ncread(thisNCFile,'pr',...
                             [region.i,region.j,1,1],...
                             [region.dimE,region.dimN,...
                             A.Variables(1).Dimensions(:,3).Length,...
                             A.Variables(1).Dimensions(:,4).Length]));
+                        if strcmpi(options,'Mean')
+                            MRain(:,:,L) = nanmean(Rain_this,3);
+                        else
+                            Rain(:,:,(L-1)*30*24+1:(L)*30*24) = Rain_this;
+                        end
+                    else
+                        Rain_this = squeeze(ncread(thisNCFile,'pr'));
+                        Rain_this = imrotate(Rain_this,angle,'nearest','loose');
+                        Rain_this = Rain_this(i_this,j_this,:);
+                        if strcmpi(options,'Mean')
+                            MRain(:,:,L) = nanmean(Rain_this,3);
+                        else
+                            Rain = cat(3,Rain,Rain_this);
+                        end
                     end
-                    
                 else
                     
                 end
@@ -153,8 +185,8 @@ for mon = MON
             RainEnsembles{M} = MRain;
             fprintf('Ensembles %02d\n',M);
         else
-            if getfield(whos('Rain'),'bytes') > 5e9
-                uiwait(msgbox('Almost out of memory, hope next time you can seperate data into files',...
+            if getfield(whos('Rain'),'bytes') > 8e9
+                uiwait(msgbox('@YC: Almost out of memory! Hope next time you can seperate data and save into several files',...
                     'Oooops','__'));
             end
             RainEnsembles{M} = Rain;
@@ -166,7 +198,7 @@ for mon = MON
     if strcmpi(options,'save')
         RainEnsembles = cellfun(@(x) int16(round(IntFac*x)), RainEnsembles, ...
             'UniformOutput',false);
-        save([saveDir,'.mat'],'RainEnsembles','-v7.3');
+        save([saveDir,'.mat'],'RainEnsembles','Rain_E','Rain_N','-v7.3');
     else
         IntFac = 1;
         fprintf('Mon %02d Exported out, in <double> format\n',M);
