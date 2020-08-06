@@ -15,7 +15,18 @@ REGIONS = REGIONS_info();
 region = REGIONS.UK;% Scotland;% Westuk;% wales
 
 %% hadukgrid
-[HadUK,E_had,N_had,HadUKyr] = getHadUK();
+[HadUK,E_had,N_had,HadUKyr] = getHadUK('tas');
+
+figure;
+setFigureProperty('Paper');
+mapIt(E_had,N_had,HadUKyr)
+text(400,1100,sprintf('HadUKGrid(1981-2000)'),'horizontalalignment','center')
+
+
+
+
+%% hadukgrid
+[HadUK,E_had,N_had,HadUKyr] = getHadUK('pr');
 
 figure;
 setFigureProperty('Paper');

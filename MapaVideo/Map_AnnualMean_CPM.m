@@ -60,8 +60,8 @@ plotRec(REGIONS.EUK);
 
 text(270,770,'NUK','fontsize',12,'horizontalalignment','center','fontweight','bold','background',[0.9 0.9 0.9 0.6]);
 text(204,220,'SWUK','fontsize',12,'horizontalalignment','center','fontweight','bold','background',[0.9 0.9 0.9 0.6]);
-text(615,165,'SEUK','fontsize',12,'horizontalalignment','center','fontweight','bold','background',[0.9 0.9 0.9 0.6]);
-text(200,-50,{'Background:CPM(1980-2000)';'AnnualMean'},'fontsize',10,'fontangle','italic')
+text(615,250,'SEUK','fontsize',12,'horizontalalignment','center','fontweight','bold','background',[0.9 0.9 0.9 0.6]);
+% text(200,-50,{'Background:CPM(1980-2000)';'AnnualMean'},'fontsize',10,'fontangle','italic')
 
 hold off
 axis equal
