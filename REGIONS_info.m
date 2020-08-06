@@ -4,11 +4,20 @@
 function REGIONS = REGIONS_info()
 
 REGIONS = struct;
+%% STREAP CALIBRATION RELATED
+REGIONS.Cleehill = struct('Name','Cleehill','minE',303,'minN',222,'dimE',110,'dimN',110,'dx',1);
+
+%% UKCP EVALUTION RELATED
+
+% areas used to compare his ukcp & fut ukcp
+REGIONS.CPM_NW = struct('Name','NWUK','E',[-150,50,400,200],'N',[996.4,250,343.8,1090.2]);
+REGIONS.CPM_NE = struct('Name','NEUK','E',[200,400,600,400],'N',[1090.2,343.8,397.4,1143.8]);
+REGIONS.CPM_S = struct('Name','SUK','E',[50,138,748,660],'N',[250,-78.42,85.03,413.45]);
 
 % areas used to compare his ukcp & fut ukcp
 REGIONS.SCO = struct('Name','bigSCO','minE',50,'minN',550,'dimE',200,'dimN',200,'dx',2.2);
 REGIONS.WAL = struct('Name','bigWAL','minE',100,'minN',0,'dimE',140,'dimN',200,'dx',2.2);
-REGIONS.EUK = struct('Name','bigEUK','minE',450,'minN',0,'dimE',150,'dimN',150,'dx',2.2);
+REGIONS.EUK = struct('Name','bigEUK','minE',415,'minN',50,'dimE',140,'dimN',175,'dx',2.2);
 
 % areas used to compare radar & his ukcp
 REGIONS.SWestuk = struct('Name','SWestuk','minE',221,'minN',41,'dimE',50,'dimN',50,'dx',2.2);

@@ -48,8 +48,8 @@ else %extract local mat for <region>
         OneMon,'UniformOutput', false)), ...
         CPM_saved.RainEnsembles, 'UniformOutput', false);
     CPM = cat(1,CPM{:});
-    E = CPM_saved.E(region.i:region.i+region.dimE-1,region.j);
-    N = CPM_saved.N(region.i,region.j:region.j+region.dimN-1);
+    E = CPM_saved.E(region.i:region.i+region.dimE-1, region.j);
+    N = CPM_saved.N(region.i, region.j:region.j+region.dimN-1);
     
     [N,E] = meshgrid(N,E);
     
