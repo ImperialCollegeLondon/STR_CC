@@ -5,7 +5,7 @@
 % ... # some necessary description #
 % All storms (convective) simulated in CPM are identified.
 %
-% Convective: 
+% Convective:
 % Those storms having point rainfall (at least once) larger than 5mm/h
 %            are identified and are regarded as convective storms.
 % Several statistics for each snapshot within those identified storms were
@@ -18,66 +18,76 @@
 %
 % Further analyses can be done to extract those chacasteristics for each
 % storm in stead for all hours.
-% 
+%
 % @ Yuting Chen
 % Imperial College London
 % yuting.chen17@imperial.ac.uk
 % ----------------------------------------------------------------------- %
 
 % Several Config
-ENSEMBLENO = getEnsNos();
+warning on
 
+ENSEMBLENO = getEnsNos();
+% :12
 for ensNo = ENSEMBLENO([1:12]);%{'RAD'}%
-    ensNo = ensNo{1};
+    ensNo = ensNo{1};% 
     for Period = {'1980-2000','2060-2080'}%{'2007-2018'}%'2020-2040',
         MON = [6:8];
-            Period = Period{1};
-            for regionName = {'SCO','WAL','EUK'}
-                regionName = regionName{1};
-%{
-                % Load Raw Data
-                [RainEnsembles,T,Config] = getData(regionName,MON,Period,ensNo);
-                
-                % GET JJA-CS
-                [pointer] = find_CS(RainEnsembles{1},Config);
-                plot(logical(pointer))
-                
-                % GET RFIELD for JJA-CS
-                % pointer(pointer==0) = NaN;
-                [RE,TE] = get_CS(RainEnsembles{1},T,pointer,Config);
-                save([Config.saveIt.path,filesep,sprintf('CS_%s_%s_FIELD_%02d-%02d_%s.mat',regionName,Period,...
-                    Config.Month(1),Config.Month(end),ensNo)],'RE','TE','Config','-v7.3')
-%}  
-Config = getConfig(upper(regionName),8,Period,ensNo);   
-Config.Month = [MON];
-load([Config.saveIt.path,filesep,sprintf('CS_%s_%s_FIELD_%02d-%02d_%s.mat',regionName,Period,...
-                    Config.Month(1),Config.Month(end),ensNo)],'RE','TE');
-                
-                
-                
-                % Get STATS table for JJA-CS
-                % including:
-                %    Precipitation volume
-                %    Size
-                %    Pmax
-                %    Speed
-                % # Notice # here only the region of each study area is used, which means
-                % the area beyond the study area was not considered to contribute the
-                % storm.
-                STATS = getSTATS(RE,Config);
-                save([Config.saveIt.path,filesep,sprintf('CS_%s_%s_STATS_%02d-%02d_%s.mat',regionName,Period,...
-                    Config.Month(1),Config.Month(end),ensNo)],'STATS','Config','-v7.3')
-                histogram(STATS.rspeed(STATS.rpmax>=5));
-                
-            end
+        Period = Period{1};% 'CPM_NW',
+        for regionName = {'CPM_NE','CPM_S'}%{'EUK','SCO','WAL'}
+            regionName = regionName{1};
+            
+%             RE = [];
+%             %%
+%             % Load Raw Data
+%             [RainEnsembles,T,Config] = getData(regionName,MON,Period,ensNo);
+%             
+%             % GET JJA-CS
+%             [pointer] = find_CS(RainEnsembles{1},Config);
+%             plot(logical(pointer))
+%             
+%             % GET RFIELD for JJA-CS
+%             % pointer(pointer==0) = NaN;
+%             [RE,TE] = get_CS(RainEnsembles{1},T,pointer,Config);
+%             save([Config.saveIt.path,filesep,sprintf('CS_%s_%s_FIELD_%02d-%02d_%s.mat',regionName,Period,...
+%                 Config.Month(1),Config.Month(end),ensNo)],'RE','TE','Config')%,'-v7.3'
+%             [warnMsg, warnId] = lastwarn;
+%             if ~isempty(warnMsg)
+%                 save([Config.saveIt.path,filesep,sprintf('CS_%s_%s_FIELD_%02d-%02d_%s.mat',regionName,Period,...
+%                     Config.Month(1),Config.Month(end),ensNo)],'RE','TE','Config','-v7.3')
+%             end
+%             warning('')
+            %%
+            Config = getConfig(upper(regionName),8,Period,ensNo);
+            Config.Month = [MON];
+            load([Config.saveIt.path,filesep,sprintf('CS_%s_%s_FIELD_%02d-%02d_%s.mat',regionName,Period,...
+                                Config.Month(1),Config.Month(end),ensNo)],'RE','TE');
+            
+            
+            
+            % Get STATS table for JJA-CS
+            % including:
+            %    Precipitation volume
+            %    Size
+            %    Pmax
+            %    Speed
+            % # Notice # here only the region of each study area is used, which means
+            % the area beyond the study area was not considered to contribute the
+            % storm.
+            STATS = getSTATS(RE,Config);
+            save([Config.saveIt.path,filesep,sprintf('CS_%s_%s_STATS_%02d-%02d_%s.mat',regionName,Period,...
+                Config.Month(1),Config.Month(end),ensNo)],'STATS','Config')
+            histogram(STATS.rspeed(STATS.rpmax>=10));
+            
+        end
         
     end
-
-% get STATS trajectory
-% R = double(RainEnsembles{ensNo}(:,:,1:end))/IntFac;
-% R = permute(R,[3,1,2]);
-
-
+    
+    % get STATS trajectory
+    % R = double(RainEnsembles{ensNo}(:,:,1:end))/IntFac;
+    % R = permute(R,[3,1,2]);
+    
+    
 end
 
 % AUXILLARY FUNCTION
@@ -148,7 +158,7 @@ function [pointer] = find_CS(R,Config)
 %
 % Currently, Convective storms were identified using following processes.
 % Please notice that the first step (event seperation) is not very
-% necessary for current CSs I identified. 
+% necessary for current CSs I identified.
 % But it might be needed if some track algorithms are plugged in. So I keep
 % this function in this way.
 %
@@ -172,6 +182,7 @@ for evi = reshape(unique(pointer),1,[])
     if evi~=0
         TE{tag} = T(pointer==evi);
         RE{tag} = double(squeeze(R(:,:,pointer==evi)))./Config.data.IntFac;
+        RE{tag} = single(RE{tag});
         tag = tag+1;
     end
 end
@@ -184,29 +195,42 @@ function STATS = getSTATS(RE,Config);
 %    Pmax
 %    Speed
 
+% trim area
+UKMap = getUKMap();
+[E,N] = getEN(Config.region);
+in = inpolygon(E,N,UKMap.borderE/1000,UKMap.borderN/1000);
+
 STATS = cellfun(@(R,i)compute4OneStorm(R,i),RE,num2cell([1:length(RE)]'),'UniformOutput',false);
 rvol = cell2mat(cellfun(@(x)x.rvol,STATS,'UniformOutput',false));
+rrmi = cell2mat(cellfun(@(x)x.rrmi,STATS,'UniformOutput',false));
 rsize = cell2mat(cellfun(@(x)x.rsize,STATS,'UniformOutput',false));
+rsizeall = cell2mat(cellfun(@(x)x.rsizeall,STATS,'UniformOutput',false));
 rpmax = cell2mat(cellfun(@(x)x.rpmax,STATS,'UniformOutput',false));
 rspeed = cell2mat(cellfun(@(x)x.rspeed,STATS,'UniformOutput',false));
 rdur = cell2mat(cellfun(@(x)x.rdur,STATS,'UniformOutput',false));
 evi = cell2mat(cellfun(@(x)x.evi,STATS,'UniformOutput',false));
-STATS = table(rvol,rsize,rpmax,rspeed,rdur,evi);
+STATS = table(rvol,rrmi,rsize,rsizeall,rpmax,rspeed,rdur,evi);
 STATS.mon = STATS.evi*0+Config.Month;
 
     function stats = compute4OneStorm(R,i)
         
-        m3d = R;
+        m3d = double(R);
+        R = m3d;%squeeze(m3d(:,:,rpmax>5));
+        rspeed = computeRSPEED(R);% unit [km/h]
+        
+        In = repmat(in,[1,1,size(m3d,3)]);
+        m3d(~In) = NaN;
+        R = m3d;%squeeze(m3d(:,:,rpmax>5));
         rpmax = nanmax(reshape(m3d,[],size(m3d,3)),[],1);
         rpmax = rpmax(:);
-        R = m3d;%squeeze(m3d(:,:,rpmax>5));
-        
         rvol = computeRVOL(R); % unit [m^3/s]
-        rsize = computeRSIZE(R);% unit [km^2]
+        rrmi = computeRMI(R); % unit [mm/h]
+        rsize = computeRSIZE(R,5);% unit [km^2]
+        rsizeall = computeRSIZE(R,0.1);% unit [km^2]
         rpmax = computeRPMAX(R);% unit [mm/h]
-        rspeed = computeRSPEED(R);% unit [km/h]
+        
         rdur = computeRDUR(R);% unit [h]
-        stats = table(rvol,rsize,rpmax,rspeed,rdur);
+        stats = table(rvol,rrmi,rsize,rsizeall,rpmax,rspeed,rdur);
         stats.evi = repmat(i,size(rvol));
     end
 
@@ -219,10 +243,15 @@ STATS.mon = STATS.evi*0+Config.Month;
         rvol = rvol/1000*1000^2/3600;
         rvol = rvol(:);
     end
-
-    function rsize = computeRSIZE(m3d);
+    function rmi = computeRMI(m3d)
+        % unit: mm/h
+        m3d = squeeze(m3d);
+        m2d = reshape(m3d,[],size(m3d,3));
+        rmi = nansum(m2d,1)./nansum(m2d>0.1,1);
+        rmi = rmi(:);
+    end
+    function rsize = computeRSIZE(m3d,rainThre)
         % unit: mm.*km*km/hour
-        rainThre = 5;
         m3d = squeeze(m3d);
         areaMat = (2.2)^2;
         rsize = nansum(reshape(m3d>rainThre,[],size(m3d,3)),1);
@@ -247,9 +276,6 @@ STATS.mon = STATS.evi*0+Config.Month;
         Rtemp = permute(m3d,[3,1,2]);% make time steps in the first dimension;
         
         Rtemp = func_onlyMCS(Rtemp,5,zeroVal);
-        % Rtemp = imresize3(Rtemp,'Scale',[1,imreso,imreso],'method','box');
-        % Rtemp(Rtemp<=0.1) = 0;
-        % Rtemp = func_R2dBZ(Rtemp,'UKMO',zeroVal);
         
         opticFlow = opticalFlowLK('NoiseThreshold',0.0005);
         
@@ -257,7 +283,7 @@ STATS.mon = STATS.evi*0+Config.Month;
         R0 = conv2(R0,ones(50)/50/50,'same');
         R0 = func_R2dBZ(R0,'UKMO',zeroVal);
         for sni = 1:size(Rtemp,1)
-  
+            
             R1 = squeeze(Rtemp(sni,:,:));
             R1 = conv2(R1,ones(50)/50/50,'same');
             R1 = func_R2dBZ(R1,'UKMO',zeroVal);
@@ -320,12 +346,18 @@ switch(method)
         end
         % #TO DO# maybe threshold for duration will be required at some
         % point.
+    case 'All'
+        PIMF = double(nanmax(reshape(R,[],size(R,3)),[],1))/scaleF;
+        T = table(PIMF(:),eventTag(:),...
+            'VariableNames',{'PIMF','EvNo'});
+        A = grpstats(T,'EvNo',{'max','numel'});
+        eventTag = T.EvNo;
 end
 end
 function [eventTag] = seperateEvent(R,method,scaleF)
 
 arguments
-    R (:,:,:) double % [E,N,Time]
+    R (:,:,:)
     method (1,:) char = 'WAR-based'
     scaleF (1,1) double = 32
 end
@@ -333,7 +365,7 @@ end
 switch(method)
     case 'WAR-based'
         [WAR] = compute_WetArea(R,scaleF,0.1);
-        [lengthi,stormsi] = seperateRadarEvents( WAR, 0.02, 2, 60, 60);
+        [lengthi,stormsi] = seperateRadarEvents( WAR, 0.02, 2, 0, 60);
         EvNo = [zeros(1,stormsi(1)-1),cell2mat(arrayfun(@(si,nsi,li,evi)...
             [evi*ones(1,li),0*ones(1,nsi-si-li)],stormsi,...
             [stormsi(2:end),length(WAR)+1],lengthi,1:length(stormsi),'UniformOutput', false))];

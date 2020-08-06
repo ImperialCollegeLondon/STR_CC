@@ -18,7 +18,7 @@ end
 
 method = struct;
 method.eventSeperation = 'WAR-based';
-method.MCScrit = 'PIMF>5';
+method.MCScrit = 'All';%'PIMF>5';
 method.DURcrit = 'WAR>0.05';
 
 data = struct;
