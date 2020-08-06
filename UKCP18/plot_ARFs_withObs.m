@@ -7,7 +7,7 @@ for regionName = {'SCO','EUK','WAL'}%{'WAL'}%
     
     regionName = regionName{1};
     
-    dataSourcePath = 'D:\UKCP18\fixedAreaARF';%'D:\UKCP18\stormcentredARF';%
+    dataSourcePath = 'D:\UKCP18\fixedAreaARF_oldRegions';%'D:\UKCP18\stormcentredARF';%
     close all
     figure;
     setFigureProperty('Subplot2')
