@@ -171,6 +171,8 @@ ax = gca;
 hold off;
 grid on;
 
+quantiles(sm(nanmedian(relDif,1))>15)
+
 end
 function mStr = getMarker(regionName)
 switch(regionName)
