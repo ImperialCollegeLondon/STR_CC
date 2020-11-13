@@ -28,13 +28,13 @@
 warning on
 
 ENSEMBLENO = getEnsNos();
-% :12
-for ensNo = ENSEMBLENO([1:12]);%{'RAD'}%
-    ensNo = ensNo{1};% 
+% 1:12
+for etag = 1:12
+    ensNo = ENSEMBLENO{etag};%{'RAD'}%
     for Period = {'1980-2000','2060-2080'}%{'2007-2018'}%'2020-2040',
         MON = [6:8];
-        Period = Period{1};% 'CPM_NW',
-        for regionName = {'CPM_NE','CPM_S'}%{'EUK','SCO','WAL'}
+        Period = Period{1};% 
+        for regionName = {'CPM_NW','CPM_NE','CPM_S'}%{'CPM_NW'}%{'CPM_NE','CPM_NW','CPM_S'}% {'EUK','SCO','WAL'}
             regionName = regionName{1};
             
 %             RE = [];
@@ -64,6 +64,7 @@ for ensNo = ENSEMBLENO([1:12]);%{'RAD'}%
                                 Config.Month(1),Config.Month(end),ensNo)],'RE','TE');
             
             
+            Config.thr = getThreshold(regionName,Period,etag);% set threshold in calculating spatial coverage as a percentile value (around 5mm/h)
             
             % Get STATS table for JJA-CS
             % including:
@@ -77,6 +78,14 @@ for ensNo = ENSEMBLENO([1:12]);%{'RAD'}%
             STATS = getSTATS(RE,Config);
             save([Config.saveIt.path,filesep,sprintf('CS_%s_%s_STATS_%02d-%02d_%s.mat',regionName,Period,...
                 Config.Month(1),Config.Month(end),ensNo)],'STATS','Config')
+            
+%             load([Config.saveIt.path,filesep,sprintf('CS_%s_%s_STATS_%02d-%02d_%s.mat',regionName,Period,...
+%                 Config.Month(1),Config.Month(end),ensNo)],'STATS','Config')
+%             Config.thr = 5;%getThreshold(regionName,Period,etag);% set threshold in calculating spatial coverage as a percentile value (around 5mm/h)
+%             STATS = updateSize(RE,Config,STATS,Config.thr);
+%             save([Config.saveIt.path,filesep,sprintf('CS_%s_%s_STATS_%02d-%02d_%s.mat',regionName,Period,...
+%                 Config.Month(1),Config.Month(end),ensNo)],'STATS','Config')
+            
             histogram(STATS.rspeed(STATS.rpmax>=10));
             
         end
@@ -91,7 +100,48 @@ for ensNo = ENSEMBLENO([1:12]);%{'RAD'}%
 end
 
 % AUXILLARY FUNCTION
+function thr = getThreshold(regionName,Period,etag)
+load([regionName,'_prctile.mat'],'PRC1','PRC2','prcval');
+switch(Period)
+    case '1980-2000'
+        thr = PRC1(etag,:);
+    case '2060-2080'
+        thr = PRC2(etag,:);
+    otherwise
+        error('chech input Period');
+end
+thr = thr(prcval==99.9);
+end
 
+function STATS = updateSize(RE,Config,STATS,thr);
+UKMap = getUKMap();
+[E,N] = getEN(Config.region);
+in = inpolygon(E,N,UKMap.borderE/1000,UKMap.borderN/1000);
+
+% STATS = cellfun(@(R,i)compute4OneStorm(R,i),RE,num2cell([1:length(RE)]'),'UniformOutput',false);
+rsize = cell2mat(cellfun(@(R)compute4OneStorm(R,thr),RE,'UniformOutput',false));
+STATS.rsizeP999 = STATS.rsize;
+STATS.rsize = rsize;
+
+    function rsize = compute4OneStorm(R,thr)
+%         m3d = double(R);
+%         In = repmat(in,[1,1,size(m3d,3)]);
+%         m3d(~In) = NaN;
+        R = reshape(R,[],size(R,3));
+        R(~in,:) = NaN;
+        % R = m3d;%squeeze(m3d(:,:,rpmax>5));
+        rsize = computeRSIZE(R,thr);% unit [km^2]
+    end
+    function rsize = computeRSIZE(R,rainThre)
+        % unit: mm.*km*km/hour
+        % R = squeeze(R);
+        areaMat = (2.2)^2;
+        rsize = nansum(R>rainThre,1);
+        rsize = rsize*areaMat;
+        rsize = rsize(:);
+    end
+end
+            
 function [RainEnsembles,T,Config] = getData(regionName,MON,Period,ENSNO)
 
 RainEnsembles = [];
@@ -216,7 +266,7 @@ STATS.mon = STATS.evi*0+Config.Month;
         
         m3d = double(R);
         R = m3d;%squeeze(m3d(:,:,rpmax>5));
-        rspeed = computeRSPEED(R);% unit [km/h]
+        [rspeed] = computeRSPEED(R);% unit [km/h]
         
         In = repmat(in,[1,1,size(m3d,3)]);
         m3d(~In) = NaN;
@@ -225,7 +275,7 @@ STATS.mon = STATS.evi*0+Config.Month;
         rpmax = rpmax(:);
         rvol = computeRVOL(R); % unit [m^3/s]
         rrmi = computeRMI(R); % unit [mm/h]
-        rsize = computeRSIZE(R,5);% unit [km^2]
+        rsize = computeRSIZE(R,Config.thr9975);% unit [km^2]
         rsizeall = computeRSIZE(R,0.1);% unit [km^2]
         rpmax = computeRPMAX(R);% unit [mm/h]
         
@@ -267,7 +317,7 @@ STATS.mon = STATS.evi*0+Config.Month;
         rdur = repmat(size(m3d,3),[1,size(m3d,3)]);
         rdur = rdur(:);
     end
-    function rspeed = computeRSPEED(m3d)
+    function [rspeed] = computeRSPEED(m3d)
         
         % imreso = 0.2;% aggregate to 11km.
         

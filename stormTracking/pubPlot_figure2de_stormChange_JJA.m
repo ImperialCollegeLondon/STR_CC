@@ -52,10 +52,10 @@ for regionName = {'CPM_NW','CPM_NE','CPM_S'}%{'EUK','WAL','SCO'}
 end
 
 format_xylabel(ha,3,2)
-savePath = 'C:\Users\Yuting Chen\Dropbox (Personal)\Data_PP\Fig_UKCP\StormTracking';
+savePath = 'E:\OneDrive - Imperial College London\dropbox\Fig_UKCP\StormTracking';
 fileName = sprintf('UKCP_plot_CStorm_JJA_%s_dif%s_%s-%s',y_name,...
     FP,ENSEMBLENO{1},ENSEMBLENO{end});
-savePlot([savePath,filesep,fileName],'XYWH',[50,0,500,675],'needreply','Y','onlyPng',false);
+savePlot([savePath,filesep,fileName],'targetSize','dc','needreply','Y','onlyPng',false);
 
 %% PLOT for other variables. % (not used)
 
@@ -309,7 +309,7 @@ ax.YTick = [10^-3,10^-2,10^-1];
 ax.XTick = [1,24,48,72,96];
 hold off;
 grid on;
-axis('square')
+% axis('square')
 legend([hsimran,hfutran],strcat('past-','(1980-2000)'),strcat('future-','(2060-2080)'))
 legend boxoff
 end

@@ -23,19 +23,19 @@ clear;clc;
 
 % Several Config
 close all
-setFigureProperty('Subplot2');
+setFigureProperty('Paper');
 global regionName savePath region ensNo
 ENSEMBLENO = getEnsNos();
 durThre = [];% 6;
 
 Num = 40;%
-for regionName = {'CPM_NW','CPM_NE','CPM_S'}% {'SCO','WAL','EUK'}% 
+for regionName = {'CPM_S','CPM_NW','CPM_NE'}%{'EUK','WAL'}% {'CPM_NW','CPM_NE','CPM_S'}% {'SCO','WAL','EUK'}% 
 
     regionName = regionName{1};
     region = getfield(REGIONS_info(),regionName);
     
     x_name = 'rpmax';%'rspeed';%'rsize';%
-    savePath = 'C:\Users\Yuting Chen\Dropbox (Personal)\Data_PP\Fig_UKCP\StormTracking';
+    savePath = 'E:\OneDrive - Imperial College London\dropbox\Fig_UKCP\StormTracking';
     %
     PERIODS = {'1980-2000','2060-2080'}; % {'2007-2018'};% ;'2020-2040',
     RAs = [];
@@ -46,23 +46,26 @@ for regionName = {'CPM_NW','CPM_NE','CPM_S'}% {'SCO','WAL','EUK'}%
     for Period = PERIODS
         
         Period = Period{1};
-        
+        %%
 %         Ra = [];
 %         for ensNo = ENSEMBLENO([1:12])
 %             ensNo = ensNo{1};
 %             [STATS0,T0] = get4Plot(Period,ensNo,Num,durThre);
-%             
+%             %%
 %             Ra0 = plot_40CS(STATS0,T0,Period,durThre,ensNo);
 %             Ra = cat(3,Ra,Ra0);
 %             close all
 %             
-%             plot_averageRa(Ra0,Period,{ensNo},durThre);
+%             % plot_averageRa(Ra0,Period,{ensNo},durThre);
 %             close all
 %         end
 %         Config = getConfig(upper(regionName),6,Period,ensNo);
 %         save(sprintf('%s%sCS_%s_%s_4PubPlot_%03dStorms.mat',Config.saveIt.path,...
 %             filesep,regionName,Period,Num*12),'Ra');
+%         
+        
         %%
+        % ha_PaFu = tight_subplot(1,3,[0.01 0.01],[.19 0.01],[.10 .15]);
         axes(ha_PaFu(pi))
         ensNo = '15';
         Config = getConfig(upper(regionName),6,Period,ensNo);
@@ -82,9 +85,19 @@ for regionName = {'CPM_NW','CPM_NE','CPM_S'}% {'SCO','WAL','EUK'}%
     ax = gca;
     ylabel('');
     ax.YTickLabel = [];
+    disp(regionName);
+    r = summaryTable{2}.peakIntensity_range./summaryTable{1}.peakIntensity_range;
+    fprintf('PeakIntensity:%g ** %g\t',summaryTable{2}.peakIntensity/summaryTable{1}.peakIntensity,median(r));
+    
+    fprintf('[%g, %g]\n',min(r-1),max(r-1));
+    fprintf('SpatialCoverage:%g\t',summaryTable{2}.spatialCoverage./summaryTable{1}.spatialCoverage);
+    r = summaryTable{2}.spatialCoverage_range./summaryTable{1}.spatialCoverage_range;
+    fprintf('[%g, %g]\n',min(r-1),max(r-1));
+    fprintf('Volume:%g\n',summaryTable{2}.totalVolume./summaryTable{1}.totalVolume);
+
     % close all
-% 
-%    %% Output Plot %%
+    %
+%     %% Output Plot %%
 %     % plot Radial averaged precipitation
 %     axes(ha_PaFu(pi))
 %     x = 2.2*(-25:25);
@@ -105,9 +118,9 @@ for regionName = {'CPM_NW','CPM_NE','CPM_S'}% {'SCO','WAL','EUK'}%
 %     
 %     % set(gca,'XScale','log');%%%%
 %     % ylim([0,1.1]);%%%%
-%    
-%     Mfit_1
-%     Mfit_2
+%     
+%     Mfit_1;
+%     Mfit_2;
 %     yyaxis right
 %     % plot(xi_1,100*(yi_2-yi_1)./yi_1,'-','Color',ones(1,3)*0.7);
 %     
@@ -130,42 +143,16 @@ for regionName = {'CPM_NW','CPM_NE','CPM_S'}% {'SCO','WAL','EUK'}%
 %     % xlim([0,40]);ylim([0,60])
 %     xlim([0,35]);ylim([0,85])
 %     xlabel('Radial distance from storm centre (km)');
-%     ylabel('Mean Precipitation (mm h^{-1})');
+%     ylabel('Mean Intensity (mm h^{-1})');
 %     set(gca,'TickDir','out');
 %     saveName = sprintf('%s-MeanP_RadialR-%s-Thre%02dh',regionName,ensNo,durThre);
 %     
 %     pos = get(gca, 'Position');xoffset = 0.05;pos(1) = pos(1) + xoffset;set(gca, 'Position', pos)
-%     savePlot([savePath,filesep,saveName],'XYWH',[150,0,750,320],'needreply','N');
+%     savePlot([savePath,filesep,saveName],'targetSize','dc','needreply','Y');% 'XYWH',[150,0,750,320],'needreply','N');
 %     
-%     close all
-% 
-%     %%
-%     
-%     % plot Intensity-Area Curve
-%     figure;
-%     hold on;
-%     
-%     DAT = squeeze(nanmean(RAs{1},3));
-%     hand(1) = plotOneIntArea(DAT,RD,RAs{1},getColor(PERIODS{1}));
-%     DAT = squeeze(nanmean(RAs{2},3));
-%     hand(2) = plotOneIntArea(DAT,RD,RAs{2},getColor(PERIODS{2}));
-%     % DAT = squeeze(nanmean(RAs{3},3));
-%     % hand(3) = plotOneIntArea(DAT,RD,RAs{3},'k');
-%     legend(hand,PERIODS);
-%     xlim([0.1,60])
-%     ylim([0.1,10^5])
-%     set(gca,'YScale','log')
-%     grid minor
-%     ylabel('Precipitation Area Covered (Km^2)');
-%     xlabel('Precipitation (mm h^{-1})');
-%     set(gca,'TickDir','out');
-%     saveName = sprintf('%s-Intensity_Area-%s-Thre%02dh',regionName,ensNo,durThre);
-%     savePlot([savePath,filesep,saveName],'XYWH',[150,0,300,250],'needreply','N','onlyPng',true);
-%     
-%     close all
+    close all
     
 end
-
 % AUXILLARY FUNCTION
 function Col = getColor(period)
 switch(period)
@@ -222,7 +209,7 @@ function Ra = plot_40CS(STATS0,T0,Period,durThre,ensNo)
 global regionName savePath region
 figure;
 Ra = zeros(51,51,0);
-
+ha = tight_subplot(5,ceil(length(STATS0)/5),[0.0 0.0],[.05 0.05],[.05 .15]);
 for i = 1:length(STATS0)
     R = STATS0{i};
     thisTime = T0{i};
@@ -244,8 +231,8 @@ for i = 1:length(STATS0)
     R_temp(R_temp<5) = 0;
     surB5 = conv2(R_temp,surVec,'same');% have at least one surronding bigger than 5mm/h
     R_temp(surB5<1) = 0; % ensure at least 2 grids > 5mm/h
-    allVec = [1,1,1;1,2,1;1,1,1];%%%%%%%%%%%%%%%0515Final
-    R_temp = conv2(R_temp,allVec/10,'same');%%%%%%%%%%%%%%%%%%%%%%0515Final
+    allVec = ones(5,5);allVec((size(allVec,1)+1)/2,(size(allVec,1)+1)/2) = 2;%%%%%%%%%%%%%%%0515Final
+    R_temp = conv2(R_temp,allVec/sum(allVec(:)),'same');%%%%%%%%%%%%%%%%%%%%%%0515Final
     [maxi,maxj] = find(R_temp==nanmax(R_temp(:)),1);
     % R_temp(R_temp<floor(nanmax(R_temp(:)))) = 0;
     % stats = regionprops('table',logical(R_temp),(R_temp),'WeightedCentroid','Area','MaxIntensity');
@@ -295,7 +282,7 @@ for i = 1:length(STATS0)
 %         end
     end
     if ~any(~(size(R)==[51,51]))
-        subplot(5,ceil(length(STATS0)/5),i);hold on;
+        axes(ha(i));hold on;
         R(R==0)=NaN; pcolor(1:51,1:51,R);
         % [maxi,maxj] = find(R == nanmax(R(:)));
         maxj = 26;maxi = 26;
@@ -304,10 +291,16 @@ for i = 1:length(STATS0)
         % ylim(maxi+[-50,50]);
         shading flat;box on;
         cptcmap('cw1-013','mapping','scaled','ncol',100,'flip',true);
-        caxis([0,30]);
+        caxis([0,50]);
         format short g
         thisTime.Format='dd-MMM-uuuu HH:mm';
-        title([string(thisTime),sprintf('%smm/h',num2str(round(R(26,26))))],'fontsize',8);
+        text(25,7,[string(thisTime),sprintf('%smm/h',num2str(round(R(26,26))))],...
+            'horizontalAlignment','center','fontsize',8,'fontweight','bold');
+        text(1,50,sprintf('(%d)',i),...
+            'horizontalAlignment','left',...
+            'verticalAlignment','top',...
+            'fontsize',8,'fontweight','bold');
+        axis([1,51,1,51])
         ax = gca;ax.XTick = [];ax.YTick = [];
         axis('square')
     end
@@ -318,7 +311,7 @@ c = colorbar('location','Manual', 'position', [0.92 0.1 0.015 0.8]);
 c.Ticks = 0:10:50;
 c.TickLabels = strcat(c.TickLabels,'mm/h');
 saveName = sprintf('%s-40CSs-highPMax_%s_%s-Thre%02d',regionName,Period,ensNo,durThre);
-savePlot([savePath,filesep,saveName],'XYWH',[150,0,910,550],'needreply','N','onlyPng',true);
+savePlot([savePath,filesep,saveName],'XYWH',[150,0,909,505],'needreply','N','onlyPng',true);
 end
 
 function [hand,xi,yi,Mfit] = plotReduction(DAT,RD,RA,colo);
@@ -435,9 +428,13 @@ summary = struct;
 Ra = reshape(Ra,[size(Ra,[1,2]),size(Ra,3)/length(ENSEMBLENO),length(ENSEMBLENO)]);
 summary.spatialCoverage_range = squeeze(nansum(squeeze(nanmean(Ra,3))>5,[1,2])*2.2*2.2);
 summary.totalVolume_range = squeeze(nansum(squeeze(nanmean(Ra,3)),[1,2])*10^-3/3600*2200*2200);
+summary.peakIntensity_range = squeeze(nanmax(squeeze(nanmean(Ra,3)),[],[1,2]));
+
 Ra = squeeze(nanmedian(nanmean(Ra,3),4));
 summary.totalVolume = nansum(Ra(:))*10^-3/3600*2200*2200;
 summary.spatialCoverage = nansum(Ra(:)>5)*2.2*2.2;
+summary.peakIntensity = nanmax(Ra(:));
+
 Ra = Ra(11:41,11:41);
 scaleN = 22;
 Ra = -0.1+exp(imresize(log(Ra+0.1),scaleN,'lanczos2'));
@@ -448,8 +445,8 @@ Ra_temp = Ra;
 
 % Ra_temp(Ra_temp<1) = NaN;%%%%%%%% 
 pcolor(x,y,Ra_temp);hold on;
-[C,h] = contour(x,y,Ra,[5,10,20],'Color',[0.1 0.1 0.1],'Linewidth',1,'Linestyle','-');
-clabel(C,h)
+[C,h] = contour(x,y,Ra,[5,10,20],'Color',[0.1 0.1 0.1],'Linewidth',0.5,'Linestyle','-');
+clabel(C,h,'FontSize',10)%,'Color','red')
 shading flat
 cptcmap('cw1-013','mapping','scaled','ncol',32,'flip',true);
 caxis([0,80])
@@ -465,16 +462,16 @@ grid on;
 xlabel('Distance from Centre /km');
 ylabel('Distance from Centre /km');
 ax = gca;hold on;
-plot(mean(ax.XLim)*ones(2,1),ax.YLim,'k:','linewidth',0.5);
-plot(ax.XLim,mean(ax.YLim)*ones(2,1),'k:','linewidth',0.5);
-text(ax.XLim(1),ax.YLim(2),sprintf('%s%s',...
+plot(mean(ax.XLim)*ones(2,1)+1.1,ax.YLim+1.1,'k:','linewidth',0.5);
+plot(ax.XLim+1.1,mean(ax.YLim)*ones(2,1)+1.1,'k:','linewidth',0.5);
+text(ax.XLim(1),ax.YLim(2),sprintf('%s\n%s',...
     getLabel(regionName),Period),...
     'horizontalalignment','left',...
-    'verticalalignment','top','fontsize',12,'Interpreter','latex');
+    'verticalalignment','top','fontsize',10,'Interpreter','latex');
 text(ax.XLim(2),ax.YLim(2),sprintf('%4.1f$m^3 s^{-1}$',...
     summary.totalVolume),...
     'horizontalalignment','right',...
-    'verticalalignment','top','fontsize',12,'Interpreter','latex');
+    'verticalalignment','top','fontsize',10,'Interpreter','latex');
 % plot(20*ones(2,1),ax.YLim,'k:','Color',[0.1 0.1 0.1],'linewidth',0.5);
 % plot(-20*ones(2,1),ax.YLim,'k:','Color',[0.1 0.1 0.1],'linewidth',0.5);
 % plot(ax.XLim,-20*ones(2,1),'k:','Color',[0.1 0.1 0.1],'linewidth',0.5);
@@ -602,7 +599,8 @@ T = TE(I(1:Num));
         As0 = As(Rii,Rjj,:);
         
         surVec = [1,1,1;1,0,1;1,1,1];
-        allVec = [1,1,1;1,2,1;1,1,1];
+        % allVec = [1,1,1;1,2,1;1,1,1];
+        allVec = ones(5,5);allVec((size(allVec,1)+1)/2,(size(allVec,1)+1)/2) = 2;
         for i = 1:size(As0,3)
             atemp = squeeze(As0(:,:,i));% 
             % atemp = conv2(squeeze(As0(:,:,i)),ones(3,3)/9,'same');
@@ -614,7 +612,7 @@ T = TE(I(1:Num));
             surB5 = conv2(atemp,surVec,'same');% have at least one surronding bigger than 5mm/h
             atemp(surB5<1) = 0;% ensure at least 2 connected is higher than 5mm/h
             
-            atemp = conv2(atemp,allVec/10,'same');%%%%%%%%%%0515Final
+            atemp = conv2(atemp,allVec/sum(allVec(:)),'same');%%%%%%%%%%0515Final
             As0(:,:,i) = atemp;
             
         end

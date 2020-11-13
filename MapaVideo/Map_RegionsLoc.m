@@ -33,7 +33,7 @@ axis off
 c = colorbar('location','Manual', 'position', [0.65 0.45 0.02 0.3],'fontsize',12);
 
 c.Ruler.TickLabelFormat='%gmm';
-c.FontSize = 12;
+c.FontSize = 10;
 plot(UKMap.borderE/1000,UKMap.borderN/1000,'-','linewidth',1,'color',[0.5,0.5,0.5]);
 ylim([0,1200]);caxis([0,3100]);xlim([0,800]);
 

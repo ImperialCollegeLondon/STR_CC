@@ -108,13 +108,13 @@ for regionName = REGIONS
     [rt0,area0] = meshgrid(rt,area);
     pcolor(ff(rt0),log2(ff(area0)),ff(Z));shading flat;hold on;
     % alpha(0.95)%'diff_darkBlue_darkRed'%BlueDarkRed18
-    cptcmap('RdYlBu_11','mapping','scaled','ncol',8,'flip',false);% ncol 20
+    cptcmap('RdYlBu_11','mapping','scaled','ncol',8,'flip',true);% ncol 20
     % [~,c] = contour(rt,log2(area),Z,[-30,-20,-10,10,15,20,25,30],'k-','ShowText','on');
-    [h,c] = contour(ff(rt0),log2(ff(area0)),ff(Z),[-40,-20,-10,10,20,30],':',...
+    [h,c] = contour(ff(rt0),log2(ff(area0)),ff(Z),[-40,-20,-10,10,20,30],'--',...
         'LineColor',[0.95 0.95 0.95],'ShowText','on');
     clabel(h,c,'Color',[0.9 0.9 0.9])
     [index] = find(Z > prctile(Z(:),99.5));
-    plot(rt0(index),log2(area0(index)),'rx','markersize',10);hold on;
+   %  plot(rt0(index),log2(area0(index)),'rx','markersize',10);hold on;
     plot(figForm.rt(mod(figForm.rt,2)>=0 & sigZ==0),...
         log2(figForm.area(mod(figForm.rt,2)>=0 & sigZ==0)),'.','color',[0.2 0.2 0.2 0.5],...
         'markersize',2);
@@ -159,13 +159,13 @@ c.TickLabels = strcat(c.TickLabels,'%');
 
 % saveName = sprintf('%s-diff_IDAF-%s-Dur%02dh_percentile%02d',regionName,'allEns',1,prcval);
 saveName = sprintf('diff_%s_IDAF-%s-Dur%02dh_percentile%02d','cpmRegions','allEns',1,prcval);
-savePlot([savePath,filesep,saveName],'units','centimeters',...
-    'XYWH',[5,0,18,7],'needreply','Y','onlyPng',false);
+savePlot([savePath,filesep,saveName],'units','centimeters',...% 'XYWH',[5,0,18,7]
+    'targetSize','dc','needreply','Y','onlyPng',false);
 close all
 %%
 % easier-understanding plot
 figure;
-setFigureProperty('Subplot2');
+setFigureProperty('Paper');
 set(0,'defaultAxesFontSize',10);
 hold on;
 h = handle(0);
@@ -216,7 +216,7 @@ c.NumColumns = 3;c.Box = 'off';
 savePath = 'C:\Users\Yuting Chen\Dropbox (Personal)\Data_PP\Fig_UKCP\IDAF\';
 saveName = sprintf('%s_ExtremeChange(CatchmentArea)','cpmRegions');
 savePlot([savePath,filesep,saveName],'units','centimeters',...
-    'XYWH',[5,0,18,7],'needreply','Y','onlyPng',false);
+    'targetSize','dc','needreply','Y','onlyPng',false);% 'XYWH',[5,0,18,7],
 
 %% Auxillary function
 function setXTick(ax)

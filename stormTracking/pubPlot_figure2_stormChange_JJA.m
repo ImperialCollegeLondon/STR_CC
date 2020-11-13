@@ -35,7 +35,7 @@ global regionName ensNo in
 
 ENSEMBLENO = getEnsNos();
 
-for regionName = {'CPM_NW','CPM_NE','CPM_S'}%{'WAL','EUK','SCO'}
+for regionName = {'CPM_NW','CPM_S','CPM_NE'}%{'WAL','EUK','SCO'}
     regionName = regionName{1};
     setFigureProperty('Paper');
     
@@ -132,7 +132,7 @@ setBinwidth(h);
 
 axes(h(1)); hold on; axis('square');
 [i_s5,j_s5] = find(samNum2>sampelNoThre & isnan(PMAP0));
-plot(PX0(j_s5),PY0(i_s5),'color',pascol,'marker','.','linewidth',1,'markersize',3);
+% plot(PX0(j_s5),PY0(i_s5),'color',pascol,'marker','.','linewidth',1,'markersize',3);
 
 isSigChange = isSigChange*0+1;
 [ij_ns] = find(isSigChange == 0 & ~isnan(PMAP0) & ...
@@ -276,8 +276,8 @@ conpd(isnan(conpd))=0;
                 gridx = 0:800:100000;
                 winx = 8000;
             case 'rsize'
-                gridx = 0:180:18000;
-                winx = 1800;
+                gridx = 0:200:18000;%18000
+                winx = 2000;
             case 'rsizeall'
                 gridx = 0:300:100000;
                 winx = 3000;

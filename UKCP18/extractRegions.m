@@ -6,7 +6,7 @@ options = 'Save';
 for ENSEMBLENO_1 = ENSEMBLENO
     for MON = 6:8
         
-        for region = [REGIONS.CPM_NE,REGIONS.CPM_NW,REGIONS.CPM_S]
+        for region = [REGIONS.CPM_S]%[REGIONS.CPM_NE,REGIONS.CPM_NW,REGIONS.CPM_S]
             % [REGIONS.SCO,REGIONS.WAL,REGIONS.EUK]
             % [REGIONS.SWestuk,REGIONS.Westuk,REGIONS.Scotland,REGIONS.London]%
             
