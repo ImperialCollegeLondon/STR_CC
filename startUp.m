@@ -2,7 +2,7 @@ function startUp()
 
 
 addpath(genpath(cd));
-addpath(genpath('C:\Users\Yuting Chen\Dropbox (Personal)\MatLab_Func'));
+addpath(genpath('E:\OneDrive - Imperial College London\dropbox\MatLab_Func'));
 
 
 

@@ -26,19 +26,19 @@ y_yr = region.minN*unit:1000:(region.maxN)*unit;
 % XX = [523746];% Easting
 % YY = [188202];% Northing
 
-for YEAR = 2017:2019
+for YEAR = 2004:2016%2017:2019
     
     [DATA,status] = importNIMROD_P(XX,YY,YEAR);
     save(sprintf('PRS_London_%04d.mat',YEAR),'DATA','XX','YY','-v7.3');
     
 end
-
-time = datetime(2020,1,1):minutes(5):datetime(2020,10,4);
-[DATA,status] = importNIMROD_P(XX,YY,time);
-save(sprintf('PRS_London_%04d.mat',2020),'DATA','XX','YY','-v7.3');
+% 
+% time = datetime(2020,1,1):minutes(5):datetime(2020,10,4);
+% [DATA,status] = importNIMROD_P(XX,YY,time);
+% save(sprintf('PRS_London_%04d.mat',2020),'DATA','XX','YY','-v7.3');
 
 %%
-for YEAR = 2017:2020
+for YEAR = 2004:2016
     load(sprintf('PRS_London_%04d.mat',YEAR),'DATA','XX','YY');
     meanVal = nanmean(DATA,'spatial');
     pcolor(meanVal*24*365);shading flat
@@ -52,7 +52,7 @@ S = shaperead(filename);
 region = struct;
 
 DATA = [];
-for YEAR = 2017:2020
+for YEAR = 2004:2020
     D = load(sprintf('PRS_London_%04d.mat',YEAR),'DATA','XX','YY');
     D.DATA = aggregate(D.DATA,1,hours(1)/minutes(5),'mm/h');
     DATA = appendTime(DATA,D.DATA);
@@ -85,11 +85,12 @@ subarea(isnan(subarea)) = -1;
 wholeLondon(isnan(wholeLondon)) = -1;
 
 A = table(subarea,wholeLondon,time);
-writetable(A,'London2017_2020.csv');
-A = readtable('London2017_2020.csv');
+writetable(A,'London2004_2020.csv');
+A = readtable('London2004_2020.csv');
 zone_name = [arrayfun(@(s)s.zone_name,S,'UniformOutput',false)]';
 A.Properties.VariableNames(1:8) = zone_name;
-writetable(A,'London2017_2020.csv');
+writetable(A,'London2004_2020.csv');
+writetable(A,['E:\OneDrive - Imperial College London\','London2004_2020.csv']);
 %%
 
 function [meanVal,subRain,dirRain,areaVal,flag] = getSubArea(DATA,shp)
