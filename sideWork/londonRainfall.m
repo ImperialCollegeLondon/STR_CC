@@ -26,7 +26,7 @@ y_yr = region.minN*unit:1000:(region.maxN)*unit;
 % XX = [523746];% Easting
 % YY = [188202];% Northing
 
-for YEAR = 2004:2016%2017:2019
+for YEAR = 2004:2005%2017:2019
     
     [DATA,status] = importNIMROD_P(XX,YY,YEAR);
     save(sprintf('PRS_London_%04d.mat',YEAR),'DATA','XX','YY','-v7.3');
@@ -54,26 +54,26 @@ region = struct;
 DATA = [];
 for YEAR = 2004:2020
     D = load(sprintf('PRS_London_%04d.mat',YEAR),'DATA','XX','YY');
-    D.DATA = aggregate(D.DATA,1,hours(1)/minutes(5),'mm/h');
+    D.DATA = aggregateDC(D.DATA,1,hours(1)/minutes(5),'mm/h');
     DATA = appendTime(DATA,D.DATA);
 end
 rain = DATA.Val;
 flag = rain>128*DATA.ScaleF;
-Time = repmat(reshape(DATA.Time,[1,1,32929]),[size(DATA.Val,[1,2]),1]);
+Time = repmat(reshape(DATA.Time,[1,1,146905]),[size(DATA.Val,[1,2]),1]);
 DATA.Val(flag) = DATA.Missingval;
 %%
 [subRain,dirRain,arealVal,flag] = deal([]);
 for ID = 1:8
     [meanVal,subRain(:,ID),dirRain(:,ID),areaVal(:,ID),flag(:,ID)] = getSubArea(DATA,S(ID));
     pcolor(DATA.XX,DATA.YY,meanVal*24*365); shading flat
-    cptcmap('precip_globalPrecip','mapping','scaled','ncol',1485,'flip',true);
+    % cptcmap('precip_globalPrecip','mapping','scaled','ncol',1485,'flip',true);
     hold on
     plot(S(ID).X([1:end-1,1]),S(ID).Y([1:end-1,1]),'color','k');
     hold on;
 end
 totalRain = nansum(subRain.*areaVal,2)./nansum(areaVal);
 
-ind = 1:32928;
+ind = 1:146905;
 totalRain = sum(subRain.*areaVal,2)./sum(areaVal);
 totalDirRain = nanmean(buffer(totalRain,24),2);
 DATA.Time.Format = 'default';
